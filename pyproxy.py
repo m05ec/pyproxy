@@ -6,7 +6,7 @@ HEX_FILTER = ''.join(
         [(len(repr(chr(i))) == 3) and chr(i) or '.' for i in range(256)])
 
 def hexdump(src, length=16, show=True):
-    if isintance(src, bytes): #if it is in bytes format, we want to decode it
+    if isinstance(src, bytes): #if it is in bytes format, we want to decode it
         src = src.decode()
     results = list()
     for i in range(0, len(src), length):
@@ -48,16 +48,15 @@ def proxy_handler(client_socket, remote_host, remote_port, receive_first):
     remote_socket.connect((remote_host, remote_port))
     
     if receive_first: #this is for protocoles that first will send you a banner before any communications like FTP
-        remote_buffer = receive_first(remote_socket)
-        if len(remote_buffer):
-            print("[<==] Recived %d bytes from remote." % len(remote_buffer))
-            hexdump(remote_buffer)
+        remote_buffer = receive_from(remote_socket)
+        hexdump(remote_buffer)
 
-            remote_buffer = response_handler(remote_buffer)
-            client_socket.send(remote_buffer)
-            print("[==>] Sent to local.")
+    remote_buffer = response_handler(remote_buffer)
+    if len(remote_buffer):
+        print("[<==] Sending %d bytes to localhost." % len(remote_buffer))
+        client_socket.send(remote_buffer)
 
-    While True:
+    while True:
         local_buffer = receive_from(client_socket)
         if len(local_buffer):
             print("[<==] Recived %d bytes from local." % len(local_buffer))
@@ -88,7 +87,7 @@ def server_loop(local_host, local_port, remote_host, remote_port, receive_first)
         server.bind((local_host, local_port))
     except Exception as e:
         print("[!!] Failed to listen on $s:%d" % (local_host, local_port))
-        print("[!!] Check for other listerning sockets or conttect permissions.")
+        print("[!!] Check for other listerning sockets or permissions.")
         print(e)
         sys.exit(0)
 
